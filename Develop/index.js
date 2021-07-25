@@ -72,14 +72,20 @@ function promptQuestions() {
                     return false;
                 }
             },
-            // collaboratorNames: [],
-            // collaboratorGithub: [],
         },
         {
             type: 'checkbox',
             name: 'badges',
             message: 'Please select witch of the badges you would like to have displayed in your README: ',
-            choices: ['', ]
+            choices: ['Total Downloads', ''],
+            default: false,
+            validate: nonChecked => { 
+                if (!nonChecked) { 
+                    return true;
+                } else { 
+                    console.log('Please select at least one!');
+                }
+            }
         },
         {
             type: 'input',
