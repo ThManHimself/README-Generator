@@ -37,7 +37,7 @@ function renderLicenseLink(license) {
 // If there is no license, return an empty string
 function renderLicenseSection(license) {
 	var text = '';
-	// if (license[0]) { 
+	// if (license) { 
 	// 	text = 'https://choosealicense.com/licenses/mit/';
 	// } else if (license[1]) { 
 	// 	text = 'https://choosealicense.com/licenses/apache-2.0/';
@@ -53,28 +53,23 @@ function renderLicenseSection(license) {
 // TODO: Create a function to generate markdown for README
 function generateMarkdown(data) {
 	console.log(data);
-	var badgeText = renderLicenseBadge(data[0].license)
-	var linkText = renderLicenseLink(data[0].license)
-	var sectionText = renderLicenseSection(data[0].license)
+	var badgeText = renderLicenseBadge(data.license)
+	var linkText = renderLicenseLink(data.license)
+	var sectionText = renderLicenseSection(data.license)
 return `
-
-# ${data[0].name}
+# ${data.name}
 
 ## Description
 
-${data[0].about}
+${data.about}
 
 ## Installation
 
-${data[0].installation}
+${data.installation}
 
 ## Usage
 
-${data[0].usage}
-
-## Credits
-
-${data[0].credits}
+${data.usage}
 
 ## License
 
@@ -84,10 +79,12 @@ ${sectionText}
 
 ## Questions
 
-
+Questions? Please feel free to contact me at:
+### ${data.githubUsername}
+${data.githubLink}
+${data.emailAddress}
 
 ## Contributors
-
 `;
 }
 

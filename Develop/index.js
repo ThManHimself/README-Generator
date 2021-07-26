@@ -9,6 +9,45 @@ function promptQuestions() {
     return inquirer.prompt([
         {
             type: 'input',
+            name: 'githubUsername',
+            message: 'Please enter your Github Username: ',
+            validate: usernameInput => { 
+                if (usernameInput) { 
+                    return true;
+                } else { 
+                    console.log('Please enter your Github Username!');
+                    return false;
+                }
+            },
+        },
+        {
+            type: 'input',
+            name: 'githubLink',
+            message: 'Please enter your Github Profile link: ',
+            validate: linkInput => { 
+                if (linkInput) { 
+                    return true;
+                } else { 
+                    console.log('Please enter your Github Profile link!');
+                    return false;
+                }
+            },
+        },
+        {
+            type: 'input',
+            name: 'emailAddress',
+            message: 'Please enter your email address: ',
+            validate: emailAddressInput => { 
+                if (emailAddressInput) { 
+                    return true;
+                } else { 
+                    console.log('Please enter your email address!');
+                    return false;
+                }
+            },
+        },
+        {
+            type: 'input',
             name: 'name',
             message: 'Project title:',
             validate: nameInput => { 
@@ -64,13 +103,6 @@ function promptQuestions() {
             name: 'credits',
             message: 'Are there other developers you would like to acknowledge on this project?',
             default: false,
-            validate: collabOrNot => { 
-                if (collabOrNot) { 
-                    return true;
-                } else { 
-                    return "There are no collborators for this project";
-                }
-            },
         },
         {
             type: 'list',
@@ -88,8 +120,7 @@ function promptQuestions() {
         },
     ])
     .then(answerData => { 
-        questions.push(answerData);
-        writeToFile('README', questions);
+        writeToFile('README', answerData);
     })
 };
 
@@ -129,39 +160,69 @@ function collaborators() {
             default: false,
         }
     ])
-    .then(collabData => { 
-        collaboratorInfo.push(collabData);
-        console.log(collaboratorInfo);
-        if (collabData.addMore) { 
-            return collaborators();
-        } else { 
-            return collaboratorInfo;
-        }
-    })
-
 }
 
 // TODO: Create a function to write README file
 function writeToFile(fileName, data) { 
     return new Promise((resolve, reject) => {
         var README = generateMarkdown(data);
-        if (data[0].credits) { 
-            var collaboratorInfo = collaborators();
-            README += collaboratorInfo[0]
-            console.log(collaboratorInfo.collaboratorName);
-            // README += collaboratorInfo[0].collaboratorGithub
-        }
-        fs.writeFile('./dist/' + fileName + '.md', README, err => { 
-            if (err) { 
-                reject(err);
-                return;
-            }
+        if (data.credits) { 
+            collaborators()
+                .then(collabData => { 
+                    collaboratorInfo.push(collabData);
+                    if (collabData.addMore) { 
+                        return collaborators();
+                    }
 
-            resolve({ 
-                ok: true,
-                message: 'File created!'
+                var collaboratorNameString = '';
+                var collaboratorGithubString = '';
+
+                for (var i = 0; i < collaboratorInfo.length; i++) { 
+                    collaboratorNameString += 
+`
+### ${collaboratorInfo[i].collaboratorName}`
+                    collaboratorGithubString += 
+`
+${collaboratorInfo[i].collaboratorName}'s Github Link: ${(collaboratorInfo[i].collaboratorGithub)}
+`
+                }
+
+                README += collaboratorNameString
+                README += collaboratorGithubString
+                
+                fs.writeFile('./dist/' + fileName + '.md', README, err => { 
+                    if (err) { 
+                        reject(err);
+                        return;
+                    }
+                    
+                    resolve({ 
+                        ok: true,
+                        message: 'File created!'
+                    });
+                });
+                
+            })
+        } else { 
+            if (!data.credits) { 
+                var noCollaborators = 
+`
+There are no other contributors on this project.`
+
+                README += noCollaborators
+            }
+            fs.writeFile('./dist/' + fileName + '.md', README, err => { 
+                if (err) { 
+                    reject(err);
+                    return;
+                }
+    
+                resolve({ 
+                    ok: true,
+                    message: 'File created!'
+                });
             });
-        });
+        }
     });
 };
 
@@ -169,8 +230,6 @@ function writeToFile(fileName, data) {
 collaboratorInfo = [];
 // TODO: Create a function to initialize app
 function init() {
-    // array to collect promptQuestions() data
-    questions = [];
     // ask the user questions
     promptQuestions();
 }
