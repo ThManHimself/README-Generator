@@ -6,7 +6,6 @@ const generateMarkdown = require('./utils/generateMarkdown.js');
 // TODO: Create an array of questions for user input
 function promptQuestions() { 
     
-    
     return inquirer.prompt([
         {
             type: 'input',
@@ -67,30 +66,17 @@ function promptQuestions() {
             default: false,
             validate: collabOrNot => { 
                 if (collabOrNot) { 
-                    collaborators();
+                    return true;
                 } else { 
-                    return false;
+                    return "There are no collborators for this project";
                 }
             },
         },
         {
-            type: 'checkbox',
-            name: 'badges',
-            message: 'Please select witch of the badges you would like to have displayed in your README: ',
-            choices: ['Total Downloads', ''],
-            default: false,
-            validate: nonChecked => { 
-                if (!nonChecked) { 
-                    return true;
-                } else { 
-                    console.log('Please select at least one!');
-                }
-            }
-        },
-        {
-            type: 'input',
+            type: 'list',
             name: 'license',
             message: 'What are others licensed to do with your project?',
+            choices: ['MIT', 'Apache', 'GPL ', 'Mozilla'],
             validate: license => { 
                 if (license) { 
                     return true;
@@ -103,12 +89,11 @@ function promptQuestions() {
     ])
     .then(answerData => { 
         questions.push(answerData);
-        console.log(questions);
-        writeToFile('README', JSON.stringify(questions));
+        writeToFile('README', questions);
     })
 };
 
-const collaborators = () => { 
+function collaborators() { 
 
     return inquirer.prompt([ 
         {
@@ -128,8 +113,8 @@ const collaborators = () => {
             type: 'input',
             name: 'collaboratorGithub',
             message: 'Collaborator Github Profile Link:',
-            validate: collabRepoLink => { 
-                if (collabRepoLink) { 
+            validate: collabGithubLink => { 
+                if (collabGithubLink) { 
                     return true;
                 } else { 
                     console.log("Please enter the collaborator's Github Profile link!");
@@ -137,15 +122,36 @@ const collaborators = () => {
                 }
             }
         },
+        {
+            type: 'confirm',
+            name: 'addMore',
+            message: 'Would you like to add another collaborator?',
+            default: false,
+        }
     ])
-}
+    .then(collabData => { 
+        collaboratorInfo.push(collabData);
+        console.log(collaboratorInfo);
+        if (collabData.addMore) { 
+            return collaborators();
+        } else { 
+            return collaboratorInfo;
+        }
+    })
 
-// console.log(promptQuestions);
+}
 
 // TODO: Create a function to write README file
 function writeToFile(fileName, data) { 
-    return new Promise((resolve, reject) => { 
-        fs.writeFile('./dist/' + fileName + '.md', data, err => { 
+    return new Promise((resolve, reject) => {
+        var README = generateMarkdown(data);
+        if (data[0].credits) { 
+            var collaboratorInfo = collaborators();
+            README += collaboratorInfo[0]
+            console.log(collaboratorInfo.collaboratorName);
+            // README += collaboratorInfo[0].collaboratorGithub
+        }
+        fs.writeFile('./dist/' + fileName + '.md', README, err => { 
             if (err) { 
                 reject(err);
                 return;
@@ -159,6 +165,8 @@ function writeToFile(fileName, data) {
     });
 };
 
+// array to collect collaborators() data
+collaboratorInfo = [];
 // TODO: Create a function to initialize app
 function init() {
     // array to collect promptQuestions() data
